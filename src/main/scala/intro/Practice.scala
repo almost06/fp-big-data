@@ -1,5 +1,7 @@
 package intro
 
+import scala.annotation.tailrec
+
 /**
   * This part has some exercises for you to practice with the recursive lists and functions.
   * For the exercises in this part you are _not_ allowed to use library functions,
@@ -18,7 +20,11 @@ object Practice {
       * @param n amount of items to take.
       * @return the first n items of xs.
       */
-    def firstN(xs: List[Int], n: Int): List[Int] = ???
+    def firstN(xs: List[Int], n: Int): List[Int] = xs match {
+      case Nil => Nil
+      case _ if n == 0 => Nil
+      case x :: tail if n > 0 => x :: firstN(tail, n-1)
+    }
 
 
     /** Q11 (4p)
@@ -28,7 +34,16 @@ object Practice {
       * @param xs list to process.
       * @return the maximum value in the list.
       */
-    def maxValue(xs: List[Int]): Int = ???
+    def maxValue(xs: List[Int]): Int = {
+      @tailrec
+      def recursion(xs: List[Int], m: Int): Int = xs match {
+          case Nil => m
+          case x :: tail if(x > m) => recursion(tail, x)
+          case x :: tail if(x < m) => recursion(tail, m)
+      }
+      if(xs == Nil) Int.MinValue
+      else recursion(xs, xs.head)
+    }
 
     /** Q12 (3p)
      * given two Ints, generate the List[Int] with both numbers inclusive
@@ -37,7 +52,14 @@ object Practice {
      * intList(2,7) // List(2,3,4,5,6,7)
      * intList(3,0) // List()
      */
-    def intList(a: Int, b: Int) : List[Int] = ???
+    def intList(a: Int, b: Int) : List[Int] = {
+      def recursion(xs: List[Int], end: Int): List[Int] = xs match {
+        case Nil => Nil
+        case x :: Nil if x <= end => x :: recursion(List(x+1), end)
+      }
+      if(a > b) List()
+      else recursion(List(a), b)
+    }
 
     /**
      * Q13 (7p)
@@ -60,5 +82,14 @@ object Practice {
      * so although 2, 6 and 10 satisfy the function, they are thrown out.
      */
     // a helper method which you've written yourself
-    def myFilter[A](xs: List[A], f: A => Boolean) : List[A] = ???
+    def myFilter[A](xs: List[A], f: A => Boolean) : List[A] = {
+      def firstRecursion(list: List[A], f: A => Boolean, counter: Int) : List[A] = list match {
+        case Nil => Nil
+        case x :: tail if(f(x) && counter%2 == 0) => x :: firstRecursion(tail, f, counter+1)
+        case x :: tail if f(x) && counter%2 != 0 => firstRecursion(tail, f, counter+1)
+        case x :: tail if !f(x) => firstRecursion(tail, f, counter)
+      }
+
+      firstRecursion(xs, f, 0)
+    }
 }

@@ -1,5 +1,7 @@
 package fp_practice
 
+import scala.annotation.tailrec
+
 /**
   * In this part you can practice your FP skills with some small exercises.
   * Hint: you can find many useful functions in the documentation of the List class.
@@ -15,7 +17,11 @@ object FPPractice {
       * @param xs the list to process.
       * @return the sum of the first 10 numbers larger than 25.
       */
-    def first10Above25(xs: List[Int]): Int = ???
+    def first10Above25(xs: List[Int]): Int = {
+      val filtered = xs.filter(n => n > 25)
+      val first10 = filtered.take(10)
+      first10.sum
+    }
 
     /** Q21 (5p)
       * Provided with a list of all grades for each student of a course,
@@ -25,16 +31,30 @@ object FPPractice {
       * @param grades a list containing a list of grades for each student.
       * @return the amount of students with passing grades.
       */
-    def passingStudents(grades: List[List[Int]]): Int = ???
+    def passingStudents(grades: List[List[Int]]): Int = {
+      val listOfGrades = grades.map(list => {
+        if(list.forall(n => n >= 4)) list.sum.toDouble / list.length
+        else 0
+      })
+      val filtered = listOfGrades.filter(n => n >= 5.75)
+      filtered.length
+    }
 
     /** Q22 (6p)
       * Return the length of the first list of which the first item's value is equal to the sum of all other items.
+ *
       * @param xs the list to process
       * @return the length of the first list of which the first item's value is equal to the sum of all other items,
       *         or None if no such list exists.
       *
       * Read the documentation on the `Option` class to find out what you should return.
       * Hint: it is very similar to the `OptionalInt` you saw earlier.
-      */
-    def headSumsTail(xs: List[List[Int]]): Option[Int] = ???
+     */
+    @tailrec
+    def headSumsTail(xs: List[List[Int]]): Option[Int] = xs match{
+      case Nil => None
+      case x :: tail if x == Nil => headSumsTail(tail)
+      case x :: _ if(x.head == x.tail.sum) => Some(x.length)
+      case _ => headSumsTail(xs.tail)
+    }
 }

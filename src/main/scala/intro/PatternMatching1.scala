@@ -1,5 +1,7 @@
 package intro
 
+import scala.annotation.tailrec
+
 /**
  * PART 1 - LISTS AND PATTERN MATCHING
  * This part gives you some basic information about pattern matching.
@@ -99,7 +101,12 @@ object PatternMatching1 {
    *
    *         Hint: you can use if statements in pattern matching.
    */
-  def firstDivByX(xs: List[Int], n: Int): OptionalNum = ???
+  @tailrec
+  def firstDivByX(xs: List[Int], n: Int): OptionalNum = xs match{
+    case Nil => Nothing()
+    case x :: _ if x % n == 0 => Num(x)
+    case _ :: tail => firstDivByX(tail, n)
+  }
 
   /** Q4 (2p)
    * Implement this function that returns a list of only the even numbers.
@@ -108,5 +115,11 @@ object PatternMatching1 {
    * @param xs the list to process.
    * @return the list of all even numbers in xs.
    */
-  def onlyEvenNumbers(xs: List[OptionalNum]): List[Int] = ???
+  def onlyEvenNumbers(xs: List[OptionalNum]): List[Int] = xs match{
+    case Nil => Nil
+    case Nothing() :: tail => onlyEvenNumbers(tail)
+    case Num(x) :: tail if x % 2 == 0 => x :: onlyEvenNumbers(tail)
+    case Num(x) :: tail if x % 2 != 0 => onlyEvenNumbers(tail)
+
+  }
 }
