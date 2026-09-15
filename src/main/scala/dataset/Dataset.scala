@@ -1,6 +1,9 @@
 package dataset
 
-import dataset.util.Commit.Commit
+import dataset.util.Commit.{Commit, CommitData, File, Parent, Stats, User}
+import java.text.SimpleDateFormat
+import java.util.SimpleTimeZone
+
 
 import java.text.SimpleDateFormat
 import java.util.SimpleTimeZone
@@ -25,7 +28,10 @@ object Dataset {
    * @param input the list of commits to process.
    * @return the average amount of additions in the commits that have stats data.
    */
-  def avgAdditions(input: List[Commit]): Int = ???
+  def avgAdditions(input: List[Commit]): Int = {
+    val mapped = input.flatMap(x => x.stats).map(x => x.additions)
+    mapped.sum / mapped.length
+  }
 
   /** Q24 (4p)
    * Find the hour of day (in 24h notation, UTC time) during which the most javascript (.js) files are changed in commits.
@@ -36,7 +42,24 @@ object Dataset {
    * @param input list of commits to process.
    * @return the hour and the amount of files changed during this hour.
    */
-  def jsTime(input: List[Commit]): (Int, Int) = ???
+  def jsTime(input: List[Commit]): (Int, Int) = {
+    def classifier(c : Commit): Int = {
+      val formatter = new SimpleDateFormat("HH")
+      formatter.setTimeZone(new SimpleTimeZone(0, "UTC"))
+
+      formatter.format(c.commit.committer.date).toInt
+    }
+    if(input.nonEmpty){
+      val map = input.groupBy(classifier)
+      val filtered = map.mapValues(x => x.map(t => t.files.map(s => {
+        if (s.filename.getOrElse("").endsWith(".js")) 1
+        else 0
+      }).sum
+      ))
+      filtered.mapValues(x => x.sum).maxBy(t => t._2) // finds the biggest count and returns as a tuple the hour and the amount of files
+    }
+    else (0, 0)
+  }
 
 
   /** Q25 (5p)
@@ -48,7 +71,16 @@ object Dataset {
    * @param repo  the repository name to consider.
    * @return the name and amount of commits for the top committer.
    */
-  def topCommitter(input: List[Commit], repo: String): (String, Int) = ???
+  def topCommitter(input: List[Commit], repo: String): (String, Int) = {
+    def classifier(c : Commit): String = {
+      c.commit.author.name
+    }
+    val map = input.filter(t=> {
+      val x = t.url.split("/")
+      x(4) + "/" + x(5) == repo
+    }).groupBy(classifier).mapValues(x => x.length)
+    map.maxBy(t => t._2)
+  }
 
   /** Q26 (9p)
    * For each repository, output the name and the amount of commits that were made to this repository in 2019 only.
@@ -60,8 +92,14 @@ object Dataset {
    *         Example output:
    *         Map("KosDP1987/students" -> 1, "giahh263/HQWord" -> 2)
    */
-  def commitsPerRepo(input: List[Commit]): Map[String, Int] = ???
-
+  def commitsPerRepo(input: List[Commit]): Map[String, Int] = {
+    def classifier(c : Commit): String = {
+      val list = c.url.split("/") // example url from our github: https://github.com/almost06/fp-big-data/commit/a4e82614639068fdebc3a7d7c972965dc4ef63da
+      list(4) + "/" + list(5)
+    }
+    val map = input.groupBy(classifier).mapValues(t => t.count(x => x.commit.committer.date.getYear == 119))
+    map.filter{case(key, value) => value > 0}
+  }
 
   /** Q27 (9p)
    * Derive the 5 file types that appear most frequent in the commit logs.
@@ -69,7 +107,13 @@ object Dataset {
    * @param input the list of commits to process.
    * @return 5 tuples containing the file extension and frequency of the most frequently appeared file types, ordered descendingly.
    */
-  def topFileFormats(input: List[Commit]): List[(String, Int)] = ???
+  def topFileFormats(input: List[Commit]): List[(String, Int)] = {
+    val list = input.flatMap(x => {
+      x.files.map(t => t.filename.getOrElse("").replaceAll("^.*\\.", ""))
+    }).groupBy(identity).mapValues(x => x.length).toList
+
+    list.sortBy(t => t._2).reverse.take(5)
+  }
 
 
   /** Q28 (9p)
@@ -85,5 +129,20 @@ object Dataset {
    *
    * Hint: for the time, use `SimpleDateFormat` and `SimpleTimeZone`.
    */
-  def mostProductivePart(input: List[Commit]): (String, Int) = ???
+  def mostProductivePart(input: List[Commit]): (String, Int) = {
+    def classifier(c: Commit): String = {
+      val formatter = new SimpleDateFormat("HH")
+      formatter.setTimeZone(new SimpleTimeZone(0, "UTC"))
+
+      val hour = formatter.format(c.commit.committer.date).toInt
+      hour match {
+        case x if x >= 5 && x < 12 => "morning"
+        case x if x >= 12 && x < 17 => "afternoon"
+        case x if x >= 17 && x < 21 => "evening"
+        case x if x >= 21 || x < 5 => "night"
+      }
+    }
+    input.groupBy(classifier).mapValues(x => x.length).maxBy(t => t._2)
+
+  }
 }
