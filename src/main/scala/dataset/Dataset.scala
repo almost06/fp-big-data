@@ -92,7 +92,6 @@ object Dataset {
    *         Example output:
    *         Map("KosDP1987/students" -> 1, "giahh263/HQWord" -> 2)
    */
-
   def commitsPerRepo(input: List[Commit]): Map[String, Int] = {
     def classifier(c : Commit): String = {
       val list = c.url.split("/") // example url from our github: https://github.com/almost06/fp-big-data/commit/a4e82614639068fdebc3a7d7c972965dc4ef63da

@@ -59,7 +59,6 @@ object Practice {
         case x :: Nil if x == end => x :: Nil
       }
       if(a > b) List()
-
       else recursion(List(a), b)
     }
 
